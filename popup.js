@@ -79,10 +79,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.textContent = '';
     }
   }
-    } catch {
-      el.textContent = '';
-    }
-  }
 
   if (!hasPwd) {
     showSetupView();
