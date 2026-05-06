@@ -152,38 +152,13 @@ browser.runtime.onMessage.addListener((message) => {
       return { locked: self.mayDisable === false };
     } catch { return { locked: false, error: 'management API unavailable' }; }
   })();
-  if (message.type === 'start-helper') return startHelper();
-  if (message.type === 'stop-helper') return stopHelper();
 });
 
-let nativePort = null;
-
-async function startHelper() {
-  if (nativePort) return { status: 'already_running' };
-  try {
-    nativePort = browser.runtime.connectNative('tablock_helper');
-    nativePort.postMessage({ type: 'start' });
-    nativePort.onDisconnect.addListener(() => { nativePort = null; });
-    setTimeout(() => { if (nativePort) nativePort.postMessage({ type: 'ping' }); }, 1000);
-    return { status: 'started' };
-  } catch (e) {
-    return { status: 'error', error: e.message };
-  }
-}
-
-async function stopHelper() {
-  if (!nativePort) return { status: 'not_running' };
-  try {
-    nativePort.postMessage({ type: 'stop' });
-    nativePort.disconnect();
-    nativePort = null;
-    return { status: 'stopped' };
-  } catch (e) {
-    return { status: 'error', error: e.message };
-  }
-}
-
-browser.runtime.onStartup.addListener(() => { setTimeout(startHelper, 3000); });
+browser.runtime.onInstalled.addListener(() => {
+  browser.contextMenus?.removeAll();
+  setupContextMenus();
+  try { browser.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
+});
 
 browser.runtime.onInstalled.addListener(() => {
   browser.contextMenus?.removeAll();
