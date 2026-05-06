@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Tab Lock",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Lock browser tabs behind biometric authentication",
   "icons": {
     "48": "icons/icon-48.png",
