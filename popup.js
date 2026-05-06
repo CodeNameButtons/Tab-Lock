@@ -74,11 +74,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const r = await browser.runtime.sendMessage({ type: 'check-policy' });
       if (r.locked) {
-        el.textContent = 'Locked by admin policy';
+        el.innerHTML = 'Locked by admin policy';
+        el.style.color = 'var(--text-secondary)';
       } else {
-        el.textContent = 'Not locked by admin policy';
+        el.innerHTML = 'Not locked by admin policy <button id="policyHelpBtn" style="background:none;border:none;color:var(--accent);font-size:10px;font-family:inherit;cursor:pointer;text-decoration:underline">How to lock</button>';
         el.style.color = 'var(--danger)';
+        setTimeout(() => {
+          const btn = document.getElementById('policyHelpBtn');
+          if (btn) btn.addEventListener('click', togglePolicyHelp);
+        }, 0);
       }
+    } catch {
+      el.textContent = '';
+    }
+  }
+
+  function togglePolicyHelp() {
+    let panel = document.getElementById('policyHelpPanel');
+    if (panel) { panel.remove(); return; }
+    const statusEl = document.getElementById('policyStatus');
+    if (!statusEl) return;
+    panel = document.createElement('div');
+    panel.id = 'policyHelpPanel';
+    panel.style.cssText = 'font-size:10px;color:var(--text-secondary);text-align:left;padding:10px 14px 0;line-height:1.5';
+    const isWin = navigator.userAgent.includes('Windows');
+    panel.innerHTML = isWin
+      ? '<b>Windows:</b><br>1. Open scripts/install-policy.bat<br>2. Right click and Run as Administrator<br>3. Restart browser'
+      : '<b>Linux/macOS:</b><br>1. Open terminal in the scripts folder<br>2. Run: sudo bash install-policy.sh<br>3. Restart browser';
+    statusEl.after(panel);
+  }
     } catch {
       el.textContent = '';
     }
