@@ -19,7 +19,7 @@ Zen Browser is based on Firefox, so you can load unpacked extensions directly wi
 2. Navigate to `about:debugging` in the address bar
 3. Click **"This Firefox"** in the left sidebar
 4. Click **"Load Temporary Add-on..."**
-5. Navigate to the `/home/izzy/Projects/Tab Lock/` folder
+5. Navigate to the extension folder (where `manifest.json` is located)
 6. Select `manifest.json`
 7. Click **Open**
 
@@ -53,10 +53,10 @@ To keep it permanently, use Method 2.
 Actually, the easiest permanent way is:
 
 1. Package the extension as a `.xpi` file:
-   ```bash
-   cd /home/izzy/Projects/Tab Lock
-   zip -r tablock.xpi manifest.json background.js content.js popup.html popup.js styles.css lock-screen.css icons/
-   ```
+    ```bash
+    cd /path/to/extension
+    zip -r tablock.xpi manifest.json background.js content.js popup.html popup.js styles.css lock-screen.css icons/
+    ```
 
 2. Open `about:addons` in Zen Browser
 3. Click the gear icon (settings) → "Install Add-on From File..."
