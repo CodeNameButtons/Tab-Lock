@@ -4,8 +4,9 @@
   "version": "1.2.0",
   "description": "Lock browser tabs behind biometric authentication",
   "icons": {
-    "48": "icons/locked.svg",
-    "96": "icons/locked.svg"
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "128": "icons/icon-128.png"
   },
   "permissions": [
     "tabs",
