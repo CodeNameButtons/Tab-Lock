@@ -1,0 +1,27 @@
+/* Tab Lock Zen Mod - userContent.css
+ * Affects web page content (the lock screen overlay)
+ * Copy contents into your profile's chrome/userContent.css */
+
+/* Make the lock screen overlay match Zen's acrylic style */
+@-moz-document url-prefix("https://") {
+  #tab-lock-overlay {
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+  }
+
+  #tab-lock-overlay .tab-lock-card {
+    border-radius: 16px !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.3) !important;
+  }
+
+  #tab-lock-overlay .tab-lock-btn {
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+  }
+
+  #tab-lock-overlay .tab-lock-remove {
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+  }
+}

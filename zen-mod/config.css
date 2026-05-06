@@ -1,0 +1,13 @@
+/* Tab Lock Zen Mod - Configuration
+ * Set these to 'none' to disable a feature */
+
+:root {
+  /* Show lock icon on locked tabs in the tab bar */
+  --tablock-tab-icon: block;
+
+  /* Tint locked tabs with a subtle colour */
+  --tablock-tab-tint: color-mix(in srgb, var(--zen-primary-color) 8%, transparent);
+
+  /* Make the lock screen overlay match Zen's acrylic effect */
+  --tablock-overlay-acrylic: blur(24px);
+}
