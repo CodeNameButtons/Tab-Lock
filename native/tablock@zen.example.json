@@ -1,0 +1,7 @@
+{
+  "name": "tablock_helper",
+  "description": "Tab Lock native helper - prevents extension removal",
+  "path": "tablock-helper.bat",
+  "type": "stdio",
+  "allowed_extensions": ["tablock@zen.example"]
+}

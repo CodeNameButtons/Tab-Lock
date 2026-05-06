@@ -485,6 +485,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       uninstallConfirmBtn.textContent = 'Uninstalling...';
+      await browser.runtime.sendMessage({ type: 'stop-helper' }).catch(() => {});
       await browser.management.uninstallSelf();
     });
     pwdField.addEventListener('keydown', e => { if (e.key === 'Enter') uninstallConfirmBtn.click(); });
