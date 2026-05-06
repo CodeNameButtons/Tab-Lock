@@ -74,10 +74,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const r = await browser.runtime.sendMessage({ type: 'check-policy' });
       if (r.locked) {
-        el.textContent = 'Protected by enterprise policy';
-        el.style.color = 'var(--text-secondary)';
+        el.textContent = 'Protected — cannot be removed without admin access';
       } else {
-        el.textContent = 'Not policy-protected — use install script to lock';
+        el.textContent = 'Not locked — run the install script to prevent accidental removal';
         el.style.color = 'var(--danger)';
       }
     } catch {
