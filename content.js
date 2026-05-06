@@ -1,13 +1,4 @@
 (function() {
-  function getPlatformAuth() {
-    const ua = navigator.userAgent;
-    if (/windows/i.test(ua)) return { name: 'Windows Hello', icon: 'fingerprint' };
-    if (/macintosh|mac os x/i.test(ua)) return { name: 'Touch ID', icon: 'fingerprint' };
-    if (/android/i.test(ua)) return { name: 'Biometrics', icon: 'fingerprint' };
-    if (/iphone|ipad|ipod/i.test(ua)) return { name: 'Face ID', icon: 'face' };
-    return { name: 'Passkey', icon: 'passkey' };
-  }
-
   let overlay = null;
   let currentTab = null;
   let autoLockTimer = null;
@@ -345,7 +336,7 @@
         clearStatus();
         btn.style.display = '';
         if (e.name === 'NotAllowedError') err.textContent = 'Cancelled';
-        else err.textContent = getPlatformAuth().name + ': ' + (e.message || e.name || 'failed');
+        else err.textContent = 'Authentication failed';
       }
     });
   }
@@ -483,7 +474,7 @@
       if (section) return { success: false, error: 'Already showing' };
       section = document.createElement('div');
       section.className = 'tlock-remove-confirm';
-      section.innerHTML = '<div class="tlock-remove-confirm-text">Verify identity with ' + getPlatformAuth().name + '</div><button class="tlock-remove-confirm-btn">Verify</button><button class="tlock-remove-cancel-btn">Cancel</button>';
+      section.innerHTML = '<div class="tlock-remove-confirm-text">Verify identity</div><button class="tlock-remove-confirm-btn">Verify</button><button class="tlock-remove-cancel-btn">Cancel</button>';
       card.appendChild(section);
       const res = await attachVerifyHandlers(section, cred, host);
       if (res && res.success) showPasswordResetUI(card, overlay);
@@ -695,7 +686,7 @@
           return;
         }
         storedCred = cred;
-        section.innerHTML = '<div class="tlock-remove-confirm-text">Remove lock for this site?</div><button class="tlock-remove-confirm-btn">Confirm with ' + getPlatformAuth().name + '</button><button class="tlock-remove-cancel-btn">Cancel</button>';
+        section.innerHTML = '<div class="tlock-remove-confirm-text">Remove lock for this site?</div><button class="tlock-remove-confirm-btn">Confirm</button><button class="tlock-remove-cancel-btn">Cancel</button>';
         card.appendChild(section);
         const confirmBtn = section.querySelector('.tlock-remove-confirm-btn');
         const cancelBtn = section.querySelector('.tlock-remove-cancel-btn');
@@ -713,7 +704,7 @@
             setTimeout(removeOverlay, 400);
           } catch {
             confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Confirm with ' + getPlatformAuth().name;
+            confirmBtn.textContent = 'Confirm';
           }
         });
         cancelBtn.addEventListener('click', () => {

@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     orDiv.textContent = 'or';
     s.appendChild(orDiv);
 
-    // Check for stored passkeys for Windows Hello backup
+    // Check for stored passkeys for forgot password backup
     const knownSites = await browser.runtime.sendMessage({ type: 'get-known-sites' }).catch(() => []);
     if (knownSites.length > 0) {
       const helloBtn = document.createElement('button');
