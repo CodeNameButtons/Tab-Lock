@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!el) return;
     try {
       const r = await browser.runtime.sendMessage({ type: 'check-policy' });
-      if (r.locked) {
-        el.textContent = 'Locked by admin policy';
-      } else {
-        el.textContent = 'Not locked by admin policy';
-        el.style.color = 'var(--danger)';
-      }
+      el.textContent = r.locked ? 'Locked by admin policy' : '';
+      el.style.color = 'var(--text-secondary)';
+    } catch {
+      el.textContent = '';
+    }
+  }
     } catch {
       el.textContent = '';
     }
