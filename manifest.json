@@ -37,7 +37,7 @@
   "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'",
   "browser_specific_settings": {
     "gecko": {
-      "id": "tablock@buttonsdigital.co.uk",
+      "id": "tablock@zen.example",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"]
