@@ -1,5 +1,27 @@
 const STORAGE_KEY = 'tabLock_lockedTabs';
 const CREDS_KEY = 'tabLock_creds';
+const PWD_KEY = 'masterPasswordHash';
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hasPassword() {
+  const r = await browser.storage.local.get(PWD_KEY);
+  return !!r[PWD_KEY];
+}
+
+async function setPassword(password) {
+  await browser.storage.local.set({ [PWD_KEY]: await hashPassword(password) });
+}
+
+async function verifyPassword(password) {
+  const r = await browser.storage.local.get(PWD_KEY);
+  if (!r[PWD_KEY]) return true;
+  return (await hashPassword(password)) === r[PWD_KEY];
+}
 
 async function getLockedTabs() {
   const r = await browser.storage.local.get(STORAGE_KEY);
@@ -15,13 +37,12 @@ async function removeLockedTab(lockedTabId) {
   const match = tabs.find(t => t.id === lockedTabId);
   tabs = tabs.filter(t => t.id !== lockedTabId);
   await setLockedTabs(tabs);
-  // Only delete cred if no other locked tab uses same hostname
   if (match) {
     const host = new URL(match.url).hostname;
     const stillLocked = tabs.some(t => {
       try { return new URL(t.url).hostname === host; } catch { return false; }
     });
-    // Keep the passkey — never delete it. Reuse on future locks.
+    // Keep the passkey — reuse on future locks.
     await checkAndSetIcon(match.tabId);
   }
 }
@@ -104,37 +125,54 @@ browser.runtime.onMessage.addListener((message) => {
       if (tab) await setIconForTab(tab.tabId, message.locked);
       return { success: true };
     })();
+
+  if (message.type === 'has-password') return hasPassword();
+  if (message.type === 'set-password') return (async () => { await setPassword(message.password); return { success: true }; })();
+  if (message.type === 'verify-password') return verifyPassword(message.password);
+  if (message.type === 'change-password') return (async () => {
+    const ok = await verifyPassword(message.oldPassword);
+    if (!ok) return { success: false, error: 'Incorrect password' };
+    await setPassword(message.newPassword);
+    return { success: true };
+  })();
+  if (message.type === 'notify-locked') return (async () => {
+    try {
+      await browser.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/locked.svg',
+        title: 'Tab Locked',
+        message: message.title + ' — locked due to inactivity'
+      });
+    } catch {}
+    return { success: true };
+  })();
+  if (message.type === 'check-policy') return (async () => {
+    try {
+      const self = await browser.management.get(browser.runtime.id);
+      return { locked: self.mayDisable === false };
+    } catch { return { locked: false, error: 'management API unavailable' }; }
+  })();
 });
+
+browser.runtime.onInstalled.addListener(() => {
+  browser.contextMenus?.removeAll();
+  setupContextMenus();
+  try { browser.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
+});
+
+function setupContextMenus() {
+  browser.contextMenus?.removeAll();
+  browser.contextMenus?.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['page', 'tab'] });
+}
 
 browser.contextMenus?.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'lock-tab') {
     await browser.storage.local.set({ pendingLock: { tabId: tab.id, url: tab.url, title: tab.title } });
     browser.browserAction.openPopup();
   }
-  if (info.menuItemId === 'unlock-tab') {
-    let tabs = await getLockedTabs();
-    const match = tabs.find(t => t.tabId === tab.id);
-    if (match) {
-      await removeLockedTab(match.id);
-      await setIconForTab(tab.id, false);
-    }
-    try { await browser.tabs.sendMessage(tab.id, { type: 'hide-lock-screen' }); } catch {}
-  }
 });
 
-browser.runtime.onInstalled.addListener(() => {
-  browser.contextMenus?.removeAll();
-  browser.contextMenus?.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['tab', 'page'] });
-  browser.contextMenus?.create({ id: 'unlock-tab', title: 'Unlock Tab', contexts: ['tab', 'page'] });
-
-  browser.contextMenus?.onShown.addListener(async (info, tab) => {
-    const tabs = await getLockedTabs();
-    const isLocked = tabs.some(t => t.tabId === tab.id);
-    browser.contextMenus?.update('lock-tab', { visible: !isLocked });
-    browser.contextMenus?.update('unlock-tab', { visible: isLocked });
-    browser.contextMenus?.refresh();
-  });
-});
+setupContextMenus();
 
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) checkAndSetIcon(tabId);

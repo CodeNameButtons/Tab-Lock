@@ -191,3 +191,91 @@
   padding-top: 12px;
   line-height: 1.3;
 }
+
+.tlock-remove-confirm {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ls-border);
+}
+
+.tlock-remove-confirm-text {
+  font-size: 12px;
+  color: var(--ls-text-secondary);
+  margin-bottom: 12px;
+}
+
+.tlock-remove-confirm-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--ls-danger);
+  color: #ffffff;
+  transition: background 0.15s;
+}
+
+.tlock-remove-confirm-btn:hover {
+  opacity: 0.85;
+}
+
+.tlock-remove-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.tlock-remove-cancel-btn {
+  display: block;
+  margin: 10px auto 0;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  color: var(--ls-text-secondary);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.tlock-remove-cancel-btn:hover {
+  opacity: 1;
+}
+
+.tlock-pwd-remove {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ls-border);
+}
+
+.tlock-pwd-input {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--ls-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--ls-surface);
+  color: var(--ls-text);
+  outline: none;
+  transition: border-color 0.15s;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.tlock-pwd-input:focus {
+  border-color: var(--ls-accent);
+}
+
+.tlock-pwd-err {
+  font-size: 11px;
+  color: var(--ls-danger);
+  text-align: center;
+  min-height: 16px;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
