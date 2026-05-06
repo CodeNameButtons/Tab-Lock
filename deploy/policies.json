@@ -1,7 +1,0 @@
-{
-  "policies": {
-    "Extensions": {
-      "Locked": ["tablock@zen.example"]
-    }
-  }
-}
