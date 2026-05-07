@@ -43,8 +43,13 @@
   function callWebAuthn(type, args) {
     return new Promise((resolve, reject) => {
       const id = Math.random().toString(36).substr(2, 10);
+      const timeout = setTimeout(() => {
+        window.removeEventListener("__tlock_auth_res", handler);
+        reject({name: "TimeoutError"});
+      }, 35000);
       const handler = e => {
         if (e.detail.id === id) {
+          clearTimeout(timeout);
           window.removeEventListener("__tlock_auth_res", handler);
           if (e.detail.success) resolve(e.detail.cred);
           else reject({name: e.detail.error});
