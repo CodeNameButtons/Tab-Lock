@@ -1,14 +1,7 @@
 #!/bin/bash
-# Build TabLock.xpi from source
-# Run: bash build.sh
-python3 << 'PYEOF'
-import zipfile, os
-root = os.path.dirname(os.path.abspath(__file__))
-files = ["manifest.json","background.js","content.js","popup.html","popup.js","styles.css","lock-screen.css","icons/icon-48.png","icons/icon-64.png","icons/icon-128.png","icons/locked.svg","icons/unlocked.svg"]
-xpi = os.path.join(root, "TabLock.xpi")
-if os.path.exists(xpi): os.remove(xpi)
-with zipfile.ZipFile(xpi, "w", zipfile.ZIP_DEFLATED) as z:
-    for f in files:
-        z.write(os.path.join(root, f), f)
-print(f"TabLock.xpi built ({os.path.getsize(xpi)} bytes)")
-PYEOF
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+echo "=== Building Firefox ==="
+bash "$ROOT/firefox/build.sh"
+echo "=== Building Chrome ==="
+bash "$ROOT/chrome/build.sh"
+echo "=== Done ==="
