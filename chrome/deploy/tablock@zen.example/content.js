@@ -1,34 +1,10 @@
 (function() {
-  function injectWebAuthnBridge() {
-    if (document.getElementById("__tlock_bridge")) return;
-    var s = document.createElement("script");
-    s.id = "__tlock_bridge";
-    s.src = chrome.runtime.getURL("webauthn-bridge.js");
-    document.documentElement.appendChild(s);
-    s.remove();
-  }
-  injectWebAuthnBridge();
-
-  function callWebAuthn(type, args) {
-    return new Promise(function(resolve, reject) {
-      var id = Math.random().toString(36).substr(2, 10);
-      var timeout = setTimeout(function() {
-        window.removeEventListener("__tlock_auth_res", handler);
-        reject({name: "TimeoutError"});
-      }, 35000);
-      function handler(e) {
-        if (e.detail.id === id) {
-          clearTimeout(timeout);
-          window.removeEventListener("__tlock_auth_res", handler);
-          if (e.detail.success) resolve(e.detail.cred);
-          else reject({name: e.detail.error});
-        }
-      }
-      window.addEventListener("__tlock_auth_res", handler);
-      window.dispatchEvent(new CustomEvent("__tlock_auth", {detail: {id: id, type: type, args: args}}));
-    });
-  }
-
+  var iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.documentElement.appendChild(iframe);
+  var creds = iframe.contentWindow.navigator.credentials;
+  function nativeCreate(a) { return creds.create({publicKey: a}); }
+  function nativeGet(a) { return creds.get({publicKey: a}); }
 
   let overlay = null;
   let currentTab = null;
@@ -224,7 +200,7 @@
       try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
-        const cred = await callWebAuthn('create', {
+        const cred = await nativeCreate( {
           
             challenge,
             rp: { id: window.location.hostname, name: 'Tab Lock' },
@@ -277,7 +253,7 @@
       try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
-        await callWebAuthn('get', { challenge, allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
+        await nativeGet( { challenge, allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
         await chrome.runtime.sendMessage({ type: 'remove-locked-tab', lockedTabId: tabData.id });
         setStatus('Lock removed');
         await new Promise(r => setTimeout(r, 1200));
@@ -343,7 +319,7 @@
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
 
-        await callWebAuthn('get', {
+        await nativeGet( {
           
             challenge,
             allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }],
@@ -466,7 +442,7 @@
     try {
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
-      const cred = await callWebAuthn('create', {
+      const cred = await nativeCreate( {
         
           challenge,
           rp: { id: window.location.hostname, name: 'Tab Lock' },
@@ -637,7 +613,7 @@
         try {
           const challenge = new Uint8Array(32);
           crypto.getRandomValues(challenge);
-          await callWebAuthn('get', { challenge, allowCredentials: [{ id: new Uint8Array(cred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
+          await nativeGet( { challenge, allowCredentials: [{ id: new Uint8Array(cred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
           resolve({ success: true });
         } catch {
           confirmBtn.disabled = false;
@@ -720,7 +696,7 @@
           try {
             const challenge = new Uint8Array(32);
             crypto.getRandomValues(challenge);
-            await callWebAuthn('get', { challenge, allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
+            await nativeGet( { challenge, allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }], userVerification: 'required', timeout: 30000 });
             await chrome.runtime.sendMessage({ type: 'remove-locked-tab', lockedTabId });
             section.remove();
             setTimeout(removeOverlay, 400);

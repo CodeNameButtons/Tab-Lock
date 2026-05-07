@@ -26,7 +26,8 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["lock-screen.css"],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "world": "MAIN"
     }
   ],
   "action": {
@@ -36,12 +37,6 @@
     },
     "default_title": "Tab Lock"
   },
-  "web_accessible_resources": [
-    {
-      "resources": ["webauthn-bridge.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
   "content_security_policy": {
     "extension_pages": "default-src 'self'"
   }
