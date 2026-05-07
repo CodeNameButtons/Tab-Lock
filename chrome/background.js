@@ -160,13 +160,6 @@ chrome.runtime.onInstalled.addListener(() => {
   try { chrome.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus?.removeAll();
-  setupContextMenus();
-  try { chrome.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
-  setTimeout(startHelper, 3000);
-});
-
 function setupContextMenus() {
   chrome.contextMenus?.removeAll();
   chrome.contextMenus.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['page'] });
