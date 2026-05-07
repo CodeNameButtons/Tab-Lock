@@ -1,14 +1,4 @@
 (function() {
-  function injectWebAuthnBridge() {
-    if (document.getElementById("__tlock_bridge")) return;
-    var s = document.createElement("script");
-    s.id = "__tlock_bridge";
-    s.src = chrome.runtime.getURL("webauthn-bridge.js");
-    document.documentElement.appendChild(s);
-    s.remove();
-  }
-  injectWebAuthnBridge();
-
   function callWebAuthn(type, args) {
     return new Promise(function(resolve, reject) {
       var id = Math.random().toString(36).substr(2, 10);
