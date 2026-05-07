@@ -1,4 +1,14 @@
 (function() {
+  function injectWebAuthnBridge() {
+    if (document.getElementById("__tlock_bridge")) return;
+    const s = document.createElement("script");
+    s.id = "__tlock_bridge";
+    s.src = chrome.runtime.getURL("webauthn-bridge.js");
+    document.documentElement.appendChild(s);
+    s.remove();
+  }
+  injectWebAuthnBridge();
+
   let overlay = null;
   let currentTab = null;
   let autoLockTimer = null;
