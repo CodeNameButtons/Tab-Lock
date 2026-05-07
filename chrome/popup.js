@@ -96,9 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         new Promise(r => setTimeout(() => r({ success: false }), 5000))
       ]);
       if (!ok || !ok.success) { pwdSaveBtn.disabled = false; pwdSaveBtn.textContent = 'Save Password'; pwdError.textContent = 'Failed to save'; return; }
-      pwdInput.value = '';
-      pwdConfirm.value = '';
-      showMainView();
+      headerTitle.textContent = 'Password Saved';
+      pwdSaveBtn.textContent = 'Done';
+      setTimeout(window.close, 800);
     });
 
     pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwdSaveBtn.click(); });

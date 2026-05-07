@@ -36,6 +36,12 @@
     },
     "default_title": "Tab Lock"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["webauthn-bridge.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "default-src 'self'"
   }
