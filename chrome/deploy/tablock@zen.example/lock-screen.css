@@ -1,0 +1,193 @@
+:root { color-scheme: light dark; }
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --ls-bg: rgba(255,255,255,0.78);
+    --ls-surface: #ffffff;
+    --ls-border: #d7d7db;
+    --ls-text: #1c1c1e;
+    --ls-text-secondary: #6c6c70;
+    --ls-accent: #0060df;
+    --ls-accent-hover: #0250bb;
+    --ls-accent-active: #054096;
+    --ls-accent-text: #ffffff;
+    --ls-danger: #d70022;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ls-bg: rgba(28,27,34,0.85);
+    --ls-surface: #2b2a33;
+    --ls-border: #3a3945;
+    --ls-text: #f0f0f4;
+    --ls-text-secondary: #9b9aa5;
+    --ls-accent: #00ddff;
+    --ls-accent-hover: #80ebff;
+    --ls-accent-active: #aaf0ff;
+    --ls-accent-text: #1c1c1e;
+    --ls-danger: #ff4f5e;
+  }
+}
+
+#tab-lock-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: var(--ls-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  animation: tlock-fadein 0.2s ease;
+}
+
+@keyframes tlock-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#tab-lock-overlay * { box-sizing: border-box; }
+
+.tab-lock-card {
+  width: 340px;
+  max-width: calc(100vw - 48px);
+  background: var(--ls-surface);
+  border: 1px solid var(--ls-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  padding: 32px 28px 28px;
+  text-align: center;
+}
+
+.tab-lock-icon {
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ls-accent) 12%, transparent);
+}
+
+.tab-lock-icon svg {
+  color: var(--ls-accent);
+  width: 28px; height: 28px;
+}
+
+.tab-lock-icon.authenticating svg {
+  animation: tlock-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tlock-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.tab-lock-icon.unlocked svg {
+  color: #2ac3a2;
+  animation: tlock-swing 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tlock-swing {
+  0% { transform: rotate(0deg) scale(1); }
+  40% { transform: rotate(-12deg) scale(1.1); }
+  70% { transform: rotate(8deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+.tab-lock-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ls-text);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.tab-lock-site {
+  font-size: 13px;
+  color: var(--ls-text-secondary);
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--ls-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-lock-body { margin-bottom: 0; }
+
+.tab-lock-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: var(--ls-accent);
+  color: var(--ls-accent-text);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  user-select: none;
+}
+
+.tab-lock-btn:hover {
+  background: var(--ls-accent-hover);
+  transform: translateY(-1px);
+}
+
+.tab-lock-btn:active {
+  background: var(--ls-accent-active);
+  transform: translateY(0);
+}
+
+.tab-lock-btn svg {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+}
+
+.tab-lock-status {
+  text-align: center;
+  color: var(--ls-text-secondary);
+  font-size: 14px;
+  padding: 16px 0 8px;
+  line-height: 1.4;
+}
+
+.tab-lock-remove {
+  display: block;
+  margin: 20px auto 0;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--ls-text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  font-family: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.tab-lock-remove:hover {
+  opacity: 1;
+  color: var(--ls-danger);
+}
+
+.tab-lock-remove:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+}
+
+.tab-lock-error {
+  font-size: 12px;
+  color: var(--ls-danger);
+  text-align: center;
+  min-height: 20px;
+  padding-top: 12px;
+  line-height: 1.3;
+}

@@ -49,11 +49,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showMainView() {
-    if (passwordSetup) passwordSetup.style.display = 'none';
-    if (content) content.style.display = '';
-    if (settingsView) settingsView.style.display = 'none';
-    if (mainFooter) mainFooter.style.display = '';
-    if (backBtn) backBtn.style.display = 'none';
+    passwordSetup.style.display = 'none';
+    content.style.display = '';
+    settingsView.style.display = 'none';
+    mainFooter.style.display = '';
+    backBtn.style.display = 'none';
     headerTitle.textContent = 'Tab Lock';
     loadList();
   }
@@ -89,16 +89,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       pwdError.textContent = '';
       if (!pwd || pwd.length < 4) { pwdError.textContent = 'Password must be at least 4 characters'; return; }
       if (pwd !== confirm) { pwdError.textContent = 'Passwords do not match'; return; }
-      pwdSaveBtn.disabled = true;
-      pwdSaveBtn.textContent = 'Saving...';
-      const ok = await Promise.race([
-        chrome.runtime.sendMessage({ type: 'set-password', password: pwd }),
-        new Promise(r => setTimeout(() => r({ success: false }), 5000))
-      ]);
-      if (!ok || !ok.success) { pwdSaveBtn.disabled = false; pwdSaveBtn.textContent = 'Save Password'; pwdError.textContent = 'Failed to save'; return; }
-      headerTitle.textContent = 'Password Saved';
-      pwdSaveBtn.textContent = 'Done';
-      setTimeout(window.close, 800);
+      await chrome.runtime.sendMessage({ type: 'set-password', password: pwd });
+      pwdInput.value = '';
+      pwdConfirm.value = '';
+      showMainView();
     });
 
     pwdInput.addEventListener('keydown', e => { if (e.key === 'Enter') pwdSaveBtn.click(); });
