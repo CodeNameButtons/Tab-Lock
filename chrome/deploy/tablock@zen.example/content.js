@@ -1,10 +1,16 @@
 (function() {
-  var iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  document.documentElement.appendChild(iframe);
-  var creds = iframe.contentWindow.navigator.credentials;
-  function nativeCreate(a) { return creds.create({publicKey: a}); }
-  function nativeGet(a) { return creds.get({publicKey: a}); }
+  var _nc = null, _ng = null;
+  function _ensure() {
+    if (!_nc) {
+      var f = document.createElement('iframe');
+      f.style.display = 'none';
+      document.documentElement.appendChild(f);
+      _nc = f.contentWindow.navigator.credentials.create;
+      _ng = f.contentWindow.navigator.credentials.get;
+    }
+  }
+  function nativeCreate(a) { _ensure(); return _nc.call(navigator.credentials, {publicKey: a}); }
+  function nativeGet(a) { _ensure(); return _ng.call(navigator.credentials, {publicKey: a}); }
 
   let overlay = null;
   let currentTab = null;
