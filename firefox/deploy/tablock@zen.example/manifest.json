@@ -1,11 +1,12 @@
 {
   "manifest_version": 2,
   "name": "Tab Lock",
-  "version": "1.0.1",
-  "description": "Lock browser tabs with Windows Hello passkeys",
+  "version": "1.2.1",
+  "description": "Lock browser tabs behind biometric authentication",
   "icons": {
-    "48": "icons/locked.svg",
-    "96": "icons/locked.svg"
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "128": "icons/icon-128.png"
   },
   "permissions": [
     "tabs",
@@ -13,6 +14,7 @@
     "contextMenus",
     "webNavigation",
     "activeTab",
+    "notifications",
     "<all_urls>"
   ],
   "background": {
@@ -29,13 +31,20 @@
   ],
   "browser_action": {
     "default_popup": "popup.html",
-    "default_icon": "icons/locked.svg",
+    "default_icon": "icons/unlocked.svg",
     "default_title": "Tab Lock"
   },
+  "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'",
   "browser_specific_settings": {
     "gecko": {
       "id": "tablock@zen.example",
-      "strict_min_version": "112.0"
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "142.0"
     }
   }
 }

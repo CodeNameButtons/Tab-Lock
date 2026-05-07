@@ -181,6 +181,10 @@ browser.contextMenus?.onClicked.addListener(async (info, tab) => {
 
 setupContextMenus();
 
+browser.tabs.onActivated.addListener((activeInfo) => {
+  checkAndSetIcon(activeInfo.tabId);
+});
+
 browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) checkAndSetIcon(tabId);
 });

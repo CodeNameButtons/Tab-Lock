@@ -31,7 +31,7 @@
   ],
   "browser_action": {
     "default_popup": "popup.html",
-    "default_icon": "icons/locked.svg",
+    "default_icon": "icons/unlocked.svg",
     "default_title": "Tab Lock"
   },
   "content_security_policy": "default-src 'self'; style-src 'self' 'unsafe-inline'",
