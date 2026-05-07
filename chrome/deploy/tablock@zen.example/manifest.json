@@ -26,8 +26,13 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["lock-screen.css"],
-      "run_at": "document_start",
-      "world": "MAIN"
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["webauthn-bridge.js"],
+      "matches": ["<all_urls>"]
     }
   ],
   "action": {
