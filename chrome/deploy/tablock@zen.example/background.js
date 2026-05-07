@@ -1,13 +1,35 @@
 const STORAGE_KEY = 'tabLock_lockedTabs';
 const CREDS_KEY = 'tabLock_creds';
+const PWD_KEY = 'masterPasswordHash';
+
+async function hashPassword(password) {
+  const data = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hasPassword() {
+  const r = await chrome.storage.local.get(PWD_KEY);
+  return !!r[PWD_KEY];
+}
+
+async function setPassword(password) {
+  await chrome.storage.local.set({ [PWD_KEY]: await hashPassword(password) });
+}
+
+async function verifyPassword(password) {
+  const r = await chrome.storage.local.get(PWD_KEY);
+  if (!r[PWD_KEY]) return true;
+  return (await hashPassword(password)) === r[PWD_KEY];
+}
 
 async function getLockedTabs() {
-  const r = await browser.storage.local.get(STORAGE_KEY);
+  const r = await chrome.storage.local.get(STORAGE_KEY);
   return r[STORAGE_KEY] || [];
 }
 
 async function setLockedTabs(tabs) {
-  await browser.storage.local.set({ [STORAGE_KEY]: tabs });
+  await chrome.storage.local.set({ [STORAGE_KEY]: tabs });
 }
 
 async function removeLockedTab(lockedTabId) {
@@ -15,26 +37,25 @@ async function removeLockedTab(lockedTabId) {
   const match = tabs.find(t => t.id === lockedTabId);
   tabs = tabs.filter(t => t.id !== lockedTabId);
   await setLockedTabs(tabs);
-  // Only delete cred if no other locked tab uses same hostname
   if (match) {
     const host = new URL(match.url).hostname;
     const stillLocked = tabs.some(t => {
       try { return new URL(t.url).hostname === host; } catch { return false; }
     });
-    // Keep the passkey — never delete it. Reuse on future locks.
+    // Keep the passkey — reuse on future locks.
     await checkAndSetIcon(match.tabId);
   }
 }
 
 async function setIconForTab(tabId, locked) {
   const path = locked ? 'icons/locked.svg' : 'icons/unlocked.svg';
-  await browser.browserAction.setIcon({ path: { 48: path, 96: path }, tabId }).catch(() => {});
+  await chrome.action.setIcon({ path: { 48: path, 96: path }, tabId }).catch(() => {});
 }
 
 async function checkAndSetIcon(tabId) {
   try {
     const tabs = await getLockedTabs();
-    const tab = await browser.tabs.get(tabId).catch(() => null);
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (!tab || !tab.url) return;
     const host = new URL(tab.url).hostname;
     const locked = tabs.some(t => {
@@ -60,7 +81,7 @@ async function lockTab(tabId, url, title) {
   return { success: true, lockedTab: entry };
 }
 
-browser.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'get-locked-tabs')
     return getLockedTabs();
 
@@ -77,23 +98,23 @@ browser.runtime.onMessage.addListener((message) => {
 
   if (message.type === 'get-known-sites')
     return (async () => {
-      const creds = (await browser.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
+      const creds = (await chrome.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
       return Object.keys(creds);
     })();
 
   if (message.type === 'get-cred')
     return (async () => {
       const host = message.hostname;
-      const creds = (await browser.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
+      const creds = (await chrome.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
       return creds[host] || null;
     })();
 
   if (message.type === 'store-cred')
     return (async () => {
       const host = message.hostname;
-      const creds = (await browser.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
+      const creds = (await chrome.storage.local.get(CREDS_KEY))[CREDS_KEY] || {};
       creds[host] = message.data;
-      await browser.storage.local.set({ [CREDS_KEY]: creds });
+      await chrome.storage.local.set({ [CREDS_KEY]: creds });
       return { success: true };
     })();
 
@@ -104,43 +125,64 @@ browser.runtime.onMessage.addListener((message) => {
       if (tab) await setIconForTab(tab.tabId, message.locked);
       return { success: true };
     })();
+
+  if (message.type === 'has-password') return hasPassword();
+  if (message.type === 'set-password') return (async () => { await setPassword(message.password); return { success: true }; })();
+  if (message.type === 'verify-password') return verifyPassword(message.password);
+  if (message.type === 'change-password') return (async () => {
+    const ok = await verifyPassword(message.oldPassword);
+    if (!ok) return { success: false, error: 'Incorrect password' };
+    await setPassword(message.newPassword);
+    return { success: true };
+  })();
+  if (message.type === 'notify-locked') return (async () => {
+    try {
+      await chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icons/locked.svg',
+        title: 'Tab Locked',
+        message: message.title + ' — locked due to inactivity'
+      });
+    } catch {}
+    return { success: true };
+  })();
+  if (message.type === 'check-policy') return (async () => {
+    try {
+      const self = await chrome.management.get(chrome.runtime.id);
+      return { locked: self.mayDisable === false };
+    } catch { return { locked: false, error: 'management API unavailable' }; }
+  })();
 });
 
-browser.contextMenus?.onClicked.addListener(async (info, tab) => {
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus?.removeAll();
+  setupContextMenus();
+  try { chrome.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
+});
+
+function setupContextMenus() {
+  chrome.contextMenus?.removeAll();
+  chrome.contextMenus.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['page'] });
+}
+
+chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === 'lock-tab') {
-    await browser.storage.local.set({ pendingLock: { tabId: tab.id, url: tab.url, title: tab.title } });
-    browser.browserAction.openPopup();
-  }
-  if (info.menuItemId === 'unlock-tab') {
-    let tabs = await getLockedTabs();
-    const match = tabs.find(t => t.tabId === tab.id);
-    if (match) {
-      await removeLockedTab(match.id);
-      await setIconForTab(tab.id, false);
-    }
-    try { await browser.tabs.sendMessage(tab.id, { type: 'hide-lock-screen' }); } catch {}
+    await chrome.storage.local.set({ pendingLock: { tabId: tab.id, url: tab.url, title: tab.title } });
+    chrome.action.openPopup();
   }
 });
 
-browser.runtime.onInstalled.addListener(() => {
-  browser.contextMenus?.removeAll();
-  browser.contextMenus?.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['tab', 'page'] });
-  browser.contextMenus?.create({ id: 'unlock-tab', title: 'Unlock Tab', contexts: ['tab', 'page'] });
+setupContextMenus();
 
-  browser.contextMenus?.onShown.addListener(async (info, tab) => {
-    const tabs = await getLockedTabs();
-    const isLocked = tabs.some(t => t.tabId === tab.id);
-    browser.contextMenus?.update('lock-tab', { visible: !isLocked });
-    browser.contextMenus?.update('unlock-tab', { visible: isLocked });
-    browser.contextMenus?.refresh();
-  });
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  checkAndSetIcon(activeInfo.tabId);
 });
 
-browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) checkAndSetIcon(tabId);
 });
 
-browser.webNavigation?.onCompleted.addListener(async (details) => {
+chrome.webNavigation?.onCompleted.addListener(async (details) => {
   if (details.frameId !== 0) return;
   try {
     await checkAndSetIcon(details.tabId);
@@ -155,6 +197,6 @@ browser.webNavigation?.onCompleted.addListener(async (details) => {
     let all = await getLockedTabs();
     all = all.map(t => t.id === match.id ? { ...t, tabId: details.tabId } : t);
     await setLockedTabs(all);
-    await browser.tabs.sendMessage(details.tabId, { type: 'show-lock-screen', lockedTab: match });
+    await chrome.tabs.sendMessage(details.tabId, { type: 'show-lock-screen', lockedTab: match });
   } catch {}
 });

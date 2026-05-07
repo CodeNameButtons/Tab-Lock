@@ -174,6 +174,10 @@ chrome.contextMenus?.onClicked.addListener(async (info, tab) => {
 
 setupContextMenus();
 
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  checkAndSetIcon(activeInfo.tabId);
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url) checkAndSetIcon(tabId);
 });
