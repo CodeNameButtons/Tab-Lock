@@ -38,6 +38,7 @@ async function removeLockedTab(lockedTabId) {
   tabs = tabs.filter(t => t.id !== lockedTabId);
   await setLockedTabs(tabs);
   if (match) {
+    sendNativeUnlock(match.id);
     const host = new URL(match.url).hostname;
     const stillLocked = tabs.some(t => {
       try { return new URL(t.url).hostname === host; } catch { return false; }
@@ -82,6 +83,7 @@ async function lockTab(tabId, url, title) {
   tabs.push(entry);
   await setLockedTabs(tabs);
   await setIconForTab(tabId, true);
+  sendNativeLock(entry);
   return { success: true, lockedTab: entry };
 }
 
@@ -168,7 +170,26 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   })();
 });
 
+// ── Native messaging (optional, for uninstall protection) ──
+var _nativePort = null;
+function connectNative() {
+  try {
+    _nativePort = chrome.runtime.connectNative('tablock_helper');
+    _nativePort.onMessage.addListener(function(msg) {});
+    _nativePort.onDisconnect.addListener(function() { _nativePort = null; });
+  } catch {}
+}
+function sendNativeLock(tab) {
+  if (!_nativePort) return;
+  try { _nativePort.postMessage({type: 'register-lock', tabId: tab.tabId, url: tab.url, title: tab.title}); } catch {}
+}
+function sendNativeUnlock(lockedTabId) {
+  if (!_nativePort) return;
+  try { _nativePort.postMessage({type: 'unregister-lock', lockedTabId: lockedTabId}); } catch {}
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  connectNative();
   chrome.contextMenus?.removeAll();
   setupContextMenus();
   try { chrome.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}

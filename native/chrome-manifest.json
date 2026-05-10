@@ -1,0 +1,7 @@
+{
+  "name": "tablock_helper",
+  "description": "Tab Lock native helper - prevents lock bypass on uninstall",
+  "path": "tablock-helper.bat",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://tablock@zen.example/"]
+}

@@ -103,9 +103,12 @@
 
 
   // ── Lock screen overlay construction ──
+  var _watchdog = null, _removalWatch = null, _lockedState = false;
+
   function createUI(tab, fromAutoLock) {
     if (overlay) return;
     currentTab = tab;
+    _lockedState = true;
     stopAutoLock();
 
     overlay = document.createElement('div');
@@ -176,6 +179,45 @@
     overlay.appendChild(card);
 
     document.documentElement.appendChild(overlay);
+
+    window.dispatchEvent(new CustomEvent('__tlock_sw_lock'));
+
+    // ── Tamper protection ──
+    // Prevent DevTools shortcuts while overlay is active
+    function _trapKeys(e) {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault(); e.stopPropagation();
+      }
+    }
+    document.addEventListener('keydown', _trapKeys, true);
+    // Watchdog: re-create overlay if removed from DOM
+    _removalWatch = new MutationObserver(function(muts) {
+      if (!overlay || !_lockedState) return;
+      for (var m = 0; m < muts.length; m++) {
+        var nodes = muts[m].removedNodes;
+        for (var n = 0; n < nodes.length; n++) {
+          if (nodes[n] === overlay) {
+            document.documentElement.appendChild(overlay);
+            return;
+          }
+        }
+      }
+    });
+    _removalWatch.observe(document.documentElement, {childList: true});
+    // Periodic check that overlay still exists
+    if (_watchdog) clearInterval(_watchdog);
+    _watchdog = setInterval(function() {
+      if (!_lockedState) return;
+      if (!overlay || !document.body || !document.documentElement.contains(overlay)) {
+        if (currentTab) createUI(currentTab, false);
+      }
+    }, 200);
+    // Re-lock when tab becomes visible again (bypass via tab switch)
+    document.addEventListener('visibilitychange', function _vis() {
+      if (_lockedState && document.hidden === false && (!overlay || !document.documentElement.contains(overlay))) {
+        if (currentTab) createUI(currentTab, false);
+      }
+    });
 
     let statusEl = null;
     let autoCreating = false;
@@ -380,6 +422,10 @@
   }
 
   function removeOverlay() {
+    _lockedState = false;
+    window.dispatchEvent(new CustomEvent('__tlock_sw_unlock'));
+    if (_watchdog) { clearInterval(_watchdog); _watchdog = null; }
+    if (_removalWatch) { _removalWatch.disconnect(); _removalWatch = null; }
     if (overlay) {
       overlay.style.opacity = '0';
       overlay.style.transition = 'opacity 0.15s';
