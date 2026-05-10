@@ -81,9 +81,17 @@ async function lockTab(tabId, url, title) {
   return { success: true, lockedTab: entry };
 }
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.type === 'get-locked-tabs')
     return getLockedTabs();
+
+  if (message.type === 'inject-bridge') {
+    return chrome.scripting.executeScript({
+      target: {tabId: sender.tab.id},
+      files: ['webauthn-bridge.js'],
+      world: 'MAIN'
+    }).then(() => ({success: true})).catch(() => ({success: false}));
+  }
 
   if (message.type === 'lock-tab')
     return lockTab(message.tabId, message.url, message.title);

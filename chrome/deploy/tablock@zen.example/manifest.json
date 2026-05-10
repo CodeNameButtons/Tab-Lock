@@ -13,7 +13,8 @@
     "contextMenus",
     "webNavigation",
     "activeTab",
-    "notifications"
+    "notifications",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -27,12 +28,6 @@
       "js": ["content.js"],
       "css": ["lock-screen.css"],
       "run_at": "document_start"
-    },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["webauthn-bridge.js"],
-      "run_at": "document_start",
-      "world": "MAIN"
     }
   ],
   "action": {

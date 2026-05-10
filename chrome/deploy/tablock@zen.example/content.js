@@ -1,21 +1,29 @@
 (function() {
+  var _bridgeInjected = false;
+  function _ensureBridge() {
+    if (_bridgeInjected) return Promise.resolve();
+    return chrome.runtime.sendMessage({type: 'inject-bridge'}).then(() => { _bridgeInjected = true; }).catch(() => {});
+  }
+
   function callWebAuthn(type, args) {
-    return new Promise(function(resolve, reject) {
-      var id = Math.random().toString(36).substr(2, 10);
-      var timeout = setTimeout(function() {
-        window.removeEventListener("__tlock_auth_res", handler);
-        reject({name: "TimeoutError"});
-      }, 35000);
-      function handler(e) {
-        if (e.detail.id === id) {
-          clearTimeout(timeout);
+    return _ensureBridge().then(function() {
+      return new Promise(function(resolve, reject) {
+        var id = Math.random().toString(36).substr(2, 10);
+        var timeout = setTimeout(function() {
           window.removeEventListener("__tlock_auth_res", handler);
-          if (e.detail.success) resolve(e.detail.cred);
-          else reject({name: e.detail.error});
+          reject({name: "TimeoutError"});
+        }, 35000);
+        function handler(e) {
+          if (e.detail.id === id) {
+            clearTimeout(timeout);
+            window.removeEventListener("__tlock_auth_res", handler);
+            if (e.detail.success) resolve(e.detail.cred);
+            else reject({name: e.detail.error});
+          }
         }
-      }
-      window.addEventListener("__tlock_auth_res", handler);
-      window.dispatchEvent(new CustomEvent("__tlock_auth", {detail: {id: id, type: type, args: args}}));
+        window.addEventListener("__tlock_auth_res", handler);
+        window.dispatchEvent(new CustomEvent("__tlock_auth", {detail: {id: id, type: type, args: args}}));
+      });
     });
   }
 
