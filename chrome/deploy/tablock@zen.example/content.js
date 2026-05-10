@@ -180,7 +180,6 @@
 
     document.documentElement.appendChild(overlay);
 
-    window.dispatchEvent(new CustomEvent('__tlock_sw_lock'));
 
     // ── Tamper protection ──
     // Prevent DevTools shortcuts while overlay is active
@@ -423,7 +422,6 @@
 
   function removeOverlay() {
     _lockedState = false;
-    window.dispatchEvent(new CustomEvent('__tlock_sw_unlock'));
     if (_watchdog) { clearInterval(_watchdog); _watchdog = null; }
     if (_removalWatch) { _removalWatch.disconnect(); _removalWatch = null; }
     if (overlay) {
