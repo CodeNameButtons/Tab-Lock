@@ -1,3 +1,6 @@
+// ── WebAuthn bridge: runs in MAIN world (injected via chrome.scripting.executeScript) ──
+// Uses a hidden iframe to obtain unpatched navigator.credentials methods,
+// then calls them with .call(navigator.credentials) to preserve user activation.
 (function() {
   var iframe = document.createElement('iframe');
   iframe.style.display = 'none';

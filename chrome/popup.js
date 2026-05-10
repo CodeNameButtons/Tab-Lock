@@ -1,3 +1,4 @@
+// ── Init: load locked tabs list ──
 document.addEventListener('DOMContentLoaded', async () => {
   const content = document.getElementById('content');
   const lockBtn = document.getElementById('lockCurrentTab');
@@ -48,6 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     headerTitle.textContent = 'Set Master Password';
   }
 
+
+  // ── View switching ──
   function showMainView() {
     passwordSetup.style.display = 'none';
     content.style.display = '';
@@ -58,6 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadList();
   }
 
+
+  // ── Settings view ──
   function showSettingsView() {
     passwordSetup.style.display = 'none';
     content.style.display = 'none';
@@ -310,6 +315,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     pwdField.addEventListener('keydown', e => { if (e.key === 'Enter') doRemove(); });
   }
 
+
+  // ── Lock tab action ──
   lockBtn.addEventListener('click', async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     const result = await chrome.runtime.sendMessage({
@@ -328,6 +335,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+
+  // ── Event bindings ──
   settingsBtn.addEventListener('click', showSettingsView);
 
   resetPwdBtn.addEventListener('click', async () => {

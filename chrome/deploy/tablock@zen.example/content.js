@@ -5,6 +5,8 @@
     return chrome.runtime.sendMessage({type: 'inject-bridge'}).then(() => { _bridgeInjected = true; }).catch(() => {});
   }
 
+
+  // ── WebAuthn call: dispatches custom event to the injected bridge in MAIN world ──
   function callWebAuthn(type, args) {
     return _ensureBridge().then(function() {
       return new Promise(function(resolve, reject) {
@@ -27,6 +29,8 @@
     });
   }
 
+
+  // ── Lock screen overlay state ──
   let overlay = null;
   let currentTab = null;
   let autoLockTimer = null;
@@ -37,6 +41,8 @@
   let MEDIA_OVERRIDE = true;
   let NOTIFY_ON_LOCK = true;
 
+
+  // ── Settings ──
   chrome.storage.local.get('tabLockSettings').then(s => {
     const set = s.tabLockSettings || {};
     if (set.autoLockMinutes) AUTO_LOCK_MS = set.autoLockMinutes * 60 * 1000;
@@ -44,6 +50,8 @@
     if (set.notifyOnLock !== undefined) NOTIFY_ON_LOCK = set.notifyOnLock;
   }).catch(() => {});
 
+
+  // ── Auto-lock timer (resets on user activity) ──
   function isMediaPlaying() {
     const els = document.querySelectorAll('audio, video');
     for (const el of els) {
@@ -93,6 +101,8 @@
     </svg></div>`;
   }
 
+
+  // ── Lock screen overlay construction ──
   function createUI(tab, fromAutoLock) {
     if (overlay) return;
     currentTab = tab;
@@ -221,9 +231,8 @@
       try {
         const challenge = new Uint8Array(32);
         crypto.getRandomValues(challenge);
-        const cred = await callWebAuthn('create', {
-          
-            challenge,
+    const cred = await callWebAuthn('create', {
+          challenge,
             rp: { id: window.location.hostname, name: 'Tab Lock' },
             user: {
               id: new TextEncoder().encode(tab.id),
@@ -341,8 +350,7 @@
         crypto.getRandomValues(challenge);
 
         await callWebAuthn('get', {
-          
-            challenge,
+          challenge,
             allowCredentials: [{ id: new Uint8Array(storedCred.id), type: 'public-key' }],
             userVerification: 'required',
             timeout: 30000
@@ -365,6 +373,8 @@
     });
   }
 
+
+  // ── Overlay removal ──
   function stopAutoLock() {
     if (autoLockTimer) { clearTimeout(autoLockTimer); autoLockTimer = null; }
   }
@@ -389,6 +399,8 @@
     document.addEventListener('DOMContentLoaded', () => { checkLocked(); checkPendingIdentity(); });
   else { checkLocked(); checkPendingIdentity(); }
 
+
+  // ── Page-load checks ──
   function hostnameMatch(a, b) {
     return a.replace(/^www\./, '') === b.replace(/^www\./, '');
   }
@@ -417,6 +429,8 @@
     } catch {}
   }
 
+
+  // ── Extension message handlers ──
   chrome.runtime.onMessage.addListener(msg => {
     if (msg.type === 'show-lock-screen') {
       if (document.readyState === 'loading')
@@ -428,6 +442,8 @@
     if (msg.type === 'verify-identity') return verifyIdentity();
   });
 
+
+  // ── Storage change watcher ──
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     if (changes.tabLockSettings) {
@@ -451,6 +467,8 @@
     }
   });
 
+
+  // ── Passkey creation (called from popup before tab reload) ──
   async function createPasskeyForTab(lockedTabId) {
     if (!window.isSecureContext) return { success: false };
     const existing = await chrome.runtime.sendMessage({ type: 'get-cred', hostname: window.location.hostname }).catch(() => null);
@@ -458,8 +476,6 @@
       storedCred = existing;
       return { success: true };
     }
-    const available = true;
-    if (!available) return { success: false };
     try {
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
@@ -485,6 +501,8 @@
     }
   }
 
+
+  // ── Identity verification (forgot-password flow) ──
   async function verifyIdentity() {
     const host = window.location.hostname;
     const cred = await chrome.runtime.sendMessage({ type: 'get-cred', hostname: host }).catch(() => null);
@@ -557,6 +575,8 @@
     return res;
   }
 
+
+  // ── Password reset UI (appears after successful WebAuthn verify) ──
   function showPasswordResetUI(card, container) {
     card.textContent = '';
     const icon = document.createElement('div');
@@ -622,6 +642,8 @@
     pwd2.addEventListener('keydown', e => { if (e.key === 'Enter') saveBtn.click(); });
   }
 
+
+  // ── WebAuthn verify button handler (returns Promise) ──
   function attachVerifyHandlers(container, cred, host) {
     return new Promise(resolve => {
       const confirmBtn = container.querySelector('.tlock-remove-confirm-btn');
@@ -652,6 +674,8 @@
     });
   }
 
+
+  // ── Remove-confirm UI (password or WebAuthn) ──
   function showRemoveConfirmUI(lockedTabId) {
     if (!overlay || !currentTab) return;
     const oldRemove = overlay.querySelector('#tlock-remove');

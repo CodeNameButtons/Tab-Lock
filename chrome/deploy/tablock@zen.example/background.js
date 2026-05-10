@@ -47,6 +47,8 @@ async function removeLockedTab(lockedTabId) {
   }
 }
 
+
+// ── Icon management ──
 async function setIconForTab(tabId, locked) {
   const path = locked ? 'icons/locked.svg' : 'icons/unlocked.svg';
   await chrome.action.setIcon({ path: { 48: path, 96: path }, tabId }).catch(() => {});
@@ -65,6 +67,8 @@ async function checkAndSetIcon(tabId) {
   } catch {}
 }
 
+
+// ── Lock/unlock operations ──
 async function lockTab(tabId, url, title) {
   const tabs = await getLockedTabs();
   if (tabs.find(t => t.tabId === tabId))
@@ -81,6 +85,8 @@ async function lockTab(tabId, url, title) {
   return { success: true, lockedTab: entry };
 }
 
+
+// ── Message handlers ──
 chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.type === 'get-locked-tabs')
     return getLockedTabs();
@@ -168,6 +174,8 @@ chrome.runtime.onInstalled.addListener(() => {
   try { chrome.runtime.setUninstallURL('https://github.com/CodeNameButtons/Tab-Lock'); } catch {}
 });
 
+
+// ── Context menu ──
 function setupContextMenus() {
   chrome.contextMenus?.removeAll();
   chrome.contextMenus.create({ id: 'lock-tab', title: 'Lock Tab', contexts: ['page'] });
